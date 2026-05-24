@@ -9,7 +9,17 @@ body {
   font-family: Arial, Helvetica, sans-serif;
 }
 
-/* MAIN */
+
+.app-title {
+  position: absolute;
+  top: 20px;
+  left: 20px;
+  font-size: 24px;
+  font-weight: 700;
+  color: #5865f2;
+  letter-spacing: 1px;
+}
+
 
 .chat-container {
   display: flex;
@@ -17,7 +27,6 @@ body {
   color: white;
 }
 
-/* SIDEBAR */
 
 .sidebar {
   width: 250px;
@@ -57,8 +66,6 @@ body {
   background: #5865f2;
 }
 
-/* CHAT */
-
 .chat-box {
   flex: 1;
   display: flex;
@@ -66,12 +73,14 @@ body {
   background: #1e1f22;
 }
 
-/* HEADER */
 
 .chat-header {
   padding: 20px;
   background: #2b2d31;
   border-bottom: 1px solid #3a3c42;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
 }
 
 .chat-header h3 {
@@ -84,7 +93,23 @@ body {
   font-size: 14px;
 }
 
-/* MESSAGES */
+
+.logout-btn {
+  background: #ed4245;
+  color: white;
+  border: none;
+  padding: 8px 14px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: bold;
+  transition: 0.2s;
+}
+
+.logout-btn:hover {
+  background: #c03537;
+}
+
 
 .messages {
   flex: 1;
@@ -94,8 +119,6 @@ body {
   flex-direction: column;
   gap: 14px;
 }
-
-/* MESSAGE POSITION */
 
 .message-wrapper {
   display: flex;
@@ -108,26 +131,20 @@ body {
 .other-message {
   justify-content: flex-start;
 }
-
-/* MESSAGE CARD */
-
 .message-card {
-  background: #2b2d31;
+  display: inline-block;
+  width: fit-content;
+  max-width: 75%;
   padding: 14px 18px;
   border-radius: 16px;
-  max-width: 75%;
-  min-width: 120px;
-  width: fit-content;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+  background: #2b2d31;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  word-break: break-word;
 }
-
-/* CURRENT USER MESSAGE */
 
 .my-message .message-card {
   background: #5865f2;
 }
-
-/* USERNAME */
 
 .message-user {
   display: block;
@@ -137,8 +154,6 @@ body {
   color: #8ea1ff;
 }
 
-/* MESSAGE TEXT */
-
 .message-text {
   font-size: 15px;
   line-height: 1.5;
@@ -146,7 +161,6 @@ body {
   color: white;
 }
 
-/* INPUT AREA */
 
 .input-area {
   display: flex;

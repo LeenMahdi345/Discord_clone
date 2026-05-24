@@ -7,7 +7,7 @@ const User = require("../models/User");
 const router = express.Router();
 
 
-// REGISTER
+
 router.post("/register", async (req, res) => {
   try {
 console.log(req.body);
@@ -22,7 +22,6 @@ console.log(req.body);
       });
     }
 
-    // hash password
     const hashedPassword = await bcrypt.hash(password, 10);
     // create user
     const user = new User({
@@ -43,7 +42,7 @@ console.log(req.body);
 });
 
 
-// LOGIN
+
 router.post("/login", async (req, res) => {
   try {
 
@@ -57,7 +56,7 @@ router.post("/login", async (req, res) => {
       });
     }
 
-    // compare passwords
+   
     const isMatch = await bcrypt.compare(password, user.password);
 
     if (!isMatch) {
@@ -65,13 +64,12 @@ router.post("/login", async (req, res) => {
         message: "Wrong password",
       });
     }
-
-    // create token
-    const token = jwt.sign(
-      { id: user._id },
-      process.env.JWT_SECRET,
-      { expiresIn: "7d" }
-    );
+    const token = jwt.sign({
+  id: user._id,
+  username: user.username
+}, process.env.JWT_SECRET);
+  
+   
 
 res.status(200).json({
   token,

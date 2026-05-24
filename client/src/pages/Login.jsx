@@ -11,10 +11,13 @@ function Login() {
 
   const handleLogin = async () => {
     try {
-      const res = await axios.post("http://localhost:5000/api/auth/login", {
-        email,
-        password,
-      });
+      const res = await axios.post(
+        "http://localhost:5000/api/auth/login",
+        {
+          email,
+          password,
+        }
+      );
 
       localStorage.setItem("token", res.data.token);
       localStorage.setItem("user", JSON.stringify(res.data.user));
@@ -27,11 +30,12 @@ function Login() {
 
   return (
     <div className="auth-container">
-      <div className="auth-card">
+      <div className="app-title">Discord Clone</div>
 
+      <div className="auth-card">
         <div className="auth-header">
           <h1>Welcome back</h1>
-          <p>Login to continue to Discord Clone</p>
+          <p>Login to continue</p>
         </div>
 
         <div className="auth-form">
@@ -59,7 +63,6 @@ function Login() {
             <Link to="/register">Register</Link>
           </p>
         </div>
-
       </div>
     </div>
   );

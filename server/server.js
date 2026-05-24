@@ -17,7 +17,7 @@ app.use(express.json());
 
 app.use("/api/auth", authRoutes);
 
-// DB
+
 mongoose.connect(process.env.MONGO_URI)
 .then(() => console.log("MongoDB Connected"))
 .catch((err) => console.log(err));
@@ -26,7 +26,6 @@ app.get("/", (req, res) => {
   res.send("Server Running");
 });
 
-// old messages per channel
 app.get("/api/messages/:channel", async (req, res) => {
   try {
     const messages = await Message.find({
@@ -43,20 +42,22 @@ const server = http.createServer(app);
 
 const io = new Server(server, {
   cors: {
-    origin: "http://localhost:3000",
+    origin: "http://localhost:5173",
     methods: ["GET", "POST"],
   },
 });
 
 
-// 🔐 JWT middleware socket
 io.use((socket, next) => {
   const token = socket.handshake.auth.token;
-
-  if (!token) return next(); // allow anonymous OR you can block
+if (!token) {
+  return next(new Error("No token provided"));
+}
 
   try {
     const user = jwt.verify(token, process.env.JWT_SECRET);
+        console.log("JWT USER:", user);
+
     socket.user = user;
     next();
   } catch (err) {
@@ -65,30 +66,35 @@ io.use((socket, next) => {
 });
 
 
-// 🔥 SOCKET
+
 io.on("connection", (socket) => {
   console.log("User Connected:", socket.id);
 
-  // JOIN ROOM (channel)
+
   socket.on("join_channel", (channel) => {
     socket.join(channel);
   });
 
-  // SEND MESSAGE
-  socket.on("send_message", async (data) => {
+socket.on("send_message", async (data) => {
 
-    const newMessage = new Message({
-      user: data.user,
-      message: data.message,
-      channel: data.channel,
-    });
+ if (!socket.user?.username) {
+  return;
+}
 
-    await newMessage.save();
+const newMessage = new Message({
+  user: socket.user.username,
+  message: data.message,
+  channel: data.channel,
+});
+  await newMessage.save();
 
-    // 🔥 IMPORTANT: send only to room
-    io.to(data.channel).emit("receive_message", data);
+  io.to(data.channel).emit("receive_message", {
+    user: newMessage.user,
+    message: newMessage.message,
+    channel: newMessage.channel,
   });
 
+});
   socket.on("disconnect", () => {
     console.log("User Disconnected");
   });
