@@ -8,25 +8,24 @@ function Login() {
   const [password, setPassword] = useState("");
 
   const navigate = useNavigate();
+const handleLogin = async () => {
+  try {
+    const res = await axios.post(
+      "http://localhost:5000/api/auth/login",
+      { email, password }
+    );
 
-  const handleLogin = async () => {
-    try {
-      const res = await axios.post(
-        "http://localhost:5000/api/auth/login",
-        {
-          email,
-          password,
-        }
-      );
+    console.log("LOGIN RESPONSE:", res.data);
 
-      localStorage.setItem("token", res.data.token);
-      localStorage.setItem("user", JSON.stringify(res.data.user));
+    localStorage.setItem("token", res.data.token);
+    localStorage.setItem("user", JSON.stringify(res.data.user));
 
-      navigate("/chat");
-    } catch (err) {
-      alert(err.response?.data?.message || "Login failed");
-    }
-  };
+    navigate("/chat");
+  } catch (err) {
+    console.log("ERROR:", err);
+    alert(err.response?.data?.message || "Login failed");
+  }
+};
 
   return (
     <div className="auth-container">
