@@ -2,7 +2,7 @@ const express = require("express");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 
-const User = require("../models/User");
+const User = require("../Models/User");
 
 const router = express.Router();
 
@@ -64,11 +64,10 @@ router.post("/login", async (req, res) => {
         message: "Wrong password",
       });
     }
-    const token = jwt.sign({
+const token = jwt.sign({
   id: user._id,
   username: user.username
-}, process.env.JWT_SECRET);
-  
+}, process.env.JWT_SECRET, { expiresIn: "7d" });
    
 
 res.status(200).json({
