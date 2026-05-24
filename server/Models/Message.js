@@ -1,25 +1,10 @@
 const mongoose = require("mongoose");
 
-const messageSchema = new mongoose.Schema({
-  user: {
-    type: String,
-    required: true,
-  },
-
-  message: {
-    type: String,
-    required: true,
-  },
-
-  channel: {
-    type: String,
-    required: true,
-  },
-
-  time: {
-    type: Date,
-    default: Date.now,
-  },
+const MessageSchema = new mongoose.Schema({
+  user: { type: String, required: true },
+  message: { type: String, required: true },
+  channel: { type: String, required: true },
+  createdAt: { type: Date, default: Date.now }, // ✅ timestamp
 });
 
-module.exports = mongoose.model("Message", messageSchema);
+module.exports = mongoose.model("Message", MessageSchema);

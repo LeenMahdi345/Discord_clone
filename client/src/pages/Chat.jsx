@@ -4,14 +4,9 @@ import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import "../Style/Chat.css";
 
-const socket = io("http://localhost:5000", {
-  auth: {
-    token: localStorage.getItem("token"),
-  },
-});
-
 function Chat() {
   const navigate = useNavigate();
+  const socketRef = useRef(null);
 
   const [message, setMessage] = useState("");
   const [messages, setMessages] = useState([]);
@@ -19,15 +14,34 @@ function Chat() {
 
   const user = JSON.parse(localStorage.getItem("user")) || {};
   const token = localStorage.getItem("token");
-
   const messagesEndRef = useRef(null);
 
   useEffect(() => {
-    if (!token) navigate("/");
+    if (!token) {
+      navigate("/");
+      return;
+    }
+
+    socketRef.current = io("http://localhost:5000", {
+      auth: (cb) => {
+     
+        cb({ token: localStorage.getItem("token") });
+      },
+    });
+
+    socketRef.current.on("connect_error", (err) => {
+      console.error("Socket error:", err.message);
+      navigate("/");
+    });
+
+    return () => {
+      socketRef.current?.disconnect();
+      socketRef.current = null;
+    };
   }, [token, navigate]);
 
   useEffect(() => {
-    socket.emit("join_channel", channel);
+    socketRef.current?.emit("join_channel", channel);
   }, [channel]);
 
   useEffect(() => {
@@ -41,7 +55,6 @@ function Chat() {
         console.log(err);
       }
     };
-
     fetchMessages();
   }, [channel]);
 
@@ -52,9 +65,8 @@ function Chat() {
       }
     };
 
-    socket.on("receive_message", handleMessage);
-
-    return () => socket.off("receive_message", handleMessage);
+    socketRef.current?.on("receive_message", handleMessage);
+    return () => socketRef.current?.off("receive_message", handleMessage);
   }, [channel]);
 
   useEffect(() => {
@@ -64,8 +76,7 @@ function Chat() {
   const sendMessage = () => {
     if (!message.trim()) return;
 
-    socket.emit("send_message", {
-      user: user.username || "Anonymous",
+    socketRef.current?.emit("send_message", {
       message,
       channel,
     });
@@ -74,32 +85,29 @@ function Chat() {
   };
 
   const logout = () => {
-    socket.disconnect();
+    socketRef.current?.disconnect();
     localStorage.removeItem("token");
     localStorage.removeItem("user");
+    socketRef.current = null; 
     navigate("/");
   };
 
   return (
     <div className="chat-container">
-      {/* SIDEBAR */}
       <div className="sidebar">
         <h2 className="logo">Discord Clone</h2>
-
         <button
           className={channel === "general" ? "active" : ""}
           onClick={() => setChannel("general")}
         >
           # general
         </button>
-
         <button
           className={channel === "gaming" ? "active" : ""}
           onClick={() => setChannel("gaming")}
         >
           # gaming
         </button>
-
         <button
           className={channel === "music" ? "active" : ""}
           onClick={() => setChannel("music")}
@@ -108,14 +116,12 @@ function Chat() {
         </button>
       </div>
 
-      {/* CHAT */}
       <div className="chat-box">
         <div className="chat-header">
           <div>
             <h3># {channel}</h3>
             <p>Logged in as: {user.username}</p>
           </div>
-
           <button className="logout-btn" onClick={logout}>
             Logout
           </button>
@@ -124,7 +130,7 @@ function Chat() {
         <div className="messages">
           {messages.map((msg, index) => (
             <div
-              key={index}
+              key={msg._id || index}
               className={`message-wrapper ${
                 msg.user === user.username ? "my-message" : "other-message"
               }`}
@@ -135,7 +141,6 @@ function Chat() {
               </div>
             </div>
           ))}
-
           <div ref={messagesEndRef} />
         </div>
 
@@ -146,7 +151,6 @@ function Chat() {
             onKeyDown={(e) => e.key === "Enter" && sendMessage()}
             placeholder="Type message..."
           />
-
           <button onClick={sendMessage}>Send</button>
         </div>
       </div>

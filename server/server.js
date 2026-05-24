@@ -8,19 +8,18 @@ const jwt = require("jsonwebtoken");
 const { Server } = require("socket.io");
 
 const authRoutes = require("./Routes/auth");
-const Message = require("./models/Message");
+const Message = require("./Models/Message"); 
 
 const app = express();
 
 app.use(cors());
 app.use(express.json());
-
 app.use("/api/auth", authRoutes);
 
-
-mongoose.connect(process.env.MONGO_URI)
-.then(() => console.log("MongoDB Connected"))
-.catch((err) => console.log(err));
+mongoose
+  .connect(process.env.MONGO_URI)
+  .then(() => console.log("MongoDB Connected"))
+  .catch((err) => console.log(err));
 
 app.get("/", (req, res) => {
   res.send("Server Running");
@@ -28,10 +27,8 @@ app.get("/", (req, res) => {
 
 app.get("/api/messages/:channel", async (req, res) => {
   try {
-    const messages = await Message.find({
-      channel: req.params.channel,
-    });
-
+    const messages = await Message.find({ channel: req.params.channel })
+      .sort({ createdAt: 1 }); 
     res.json(messages);
   } catch (err) {
     res.status(500).json(err);
@@ -47,54 +44,47 @@ const io = new Server(server, {
   },
 });
 
-
 io.use((socket, next) => {
   const token = socket.handshake.auth.token;
-if (!token) {
-  return next(new Error("No token provided"));
-}
-
+  if (!token) {
+    return next(new Error("No token provided"));
+  }
   try {
     const user = jwt.verify(token, process.env.JWT_SECRET);
-        console.log("JWT USER:", user);
-
-    socket.user = user;
+    socket.user = user; 
     next();
   } catch (err) {
     next(new Error("Invalid token"));
   }
 });
 
-
-
 io.on("connection", (socket) => {
   console.log("User Connected:", socket.id);
-
 
   socket.on("join_channel", (channel) => {
     socket.join(channel);
   });
 
-socket.on("send_message", async (data) => {
+  socket.on("send_message", async (data) => {
+    if (!socket.user?.username) return;
 
- if (!socket.user?.username) {
-  return;
-}
+    const newMessage = new Message({
+      user: socket.user.username, 
+      message: data.message,
+      channel: data.channel,
+    });
 
-const newMessage = new Message({
-  user: socket.user.username,
-  message: data.message,
-  channel: data.channel,
-});
-  await newMessage.save();
+    await newMessage.save();
 
-  io.to(data.channel).emit("receive_message", {
-    user: newMessage.user,
-    message: newMessage.message,
-    channel: newMessage.channel,
+    io.to(data.channel).emit("receive_message", {
+      _id: newMessage._id, 
+      user: newMessage.user,
+      message: newMessage.message,
+      channel: newMessage.channel,
+      createdAt: newMessage.createdAt,
+    });
   });
 
-});
   socket.on("disconnect", () => {
     console.log("User Disconnected");
   });
